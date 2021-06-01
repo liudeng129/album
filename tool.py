@@ -63,11 +63,12 @@ def compress(choose, des_dir, src_dir, file_list):
     if choose == '4':
         scale = SIZE_more_small_small
     for infile in file_list:
-        img = Image.open(src_dir+infile)
+        img = Image.open(des_dir+infile)
         # size_of_file = os.path.getsize(infile)
         w, h = img.size
         img.thumbnail((int(w/scale), int(h/scale)))
         img.save(des_dir + infile)
+
 def compress_photo():
     '''调用压缩图片的函数
     '''
@@ -105,23 +106,36 @@ def handle_photo():
         filename = file_list[i]
         date_str, info = filename.split("_")
         info, _ = info.split(".")
-        date = datetime.strptime(date_str, "%Y-%m-%d")
-        year_month = date_str[0:7]
+        # 更改：为加入月份未知或日期未知的图，更改日期的提取
+        date_list = date_str.split("-")
+        # print(date_list)
+        assert len(date_list)==3
+        # date = datetime.strptime(date_str, "%Y-%m-%d")
+        year_month = date_str[0:7]  # 月份必须写成01月
+        # 补充：图片尺寸
+        img = Image.open(src_dir + filename)
+        width = str(img.width)  # 图片的宽
+        height = str(img.height)  # 图片的高
+
         if i == 0:  # 处理第一个文件
-            new_dict = {"date": year_month, "arr":{'year': date.year,
-                                                                   'month': date.month,
-                                                                   'link': [filename],
-                                                                   'text': [info],
-                                                                   'type': ['image']
+            new_dict = {"date": year_month, "arr":{'year': date_list[0],
+                                                                'month': date_list[1],
+                                                                'link': [filename],
+                                                                'text': [info],
+                                                                'type': ['image'],
+                                                                'width': [width],
+                                                                'height': [height],
                                                                    }
                                         }
             list_info.append(new_dict)
         elif year_month != list_info[-1]['date']:  # 不是最后的一个日期，就新建一个dict
-            new_dict = {"date": year_month, "arr":{'year': date.year,
-                                                   'month': date.month,
+            new_dict = {"date": year_month, "arr":{'year': date_list[0],
+                                                   'month': date_list[1],
                                                    'link': [filename],
                                                    'text': [info],
-                                                   'type': ['image']
+                                                   'type': ['image'],
+                                                   'width': [width],
+                                                   'height': [height]
                                                    }
                         }
             list_info.append(new_dict)
@@ -129,6 +143,9 @@ def handle_photo():
             list_info[-1]['arr']['link'].append(filename)
             list_info[-1]['arr']['text'].append(info)
             list_info[-1]['arr']['type'].append('image')
+            list_info[-1]['arr']['width'].append(width)
+            list_info[-1]['arr']['height'].append(height)
+
     list_info.reverse()  # 翻转
     final_dict = {"list": list_info}
     with open("D:/Blog/liudeng129/blog/source/photos/data.json","w") as fp:
@@ -141,23 +158,76 @@ def cut_photo():
     调用Graphics类中的裁剪算法，将src_dir目录下的文件进行裁剪（裁剪成正方形）
     """
     src_dir = "photos/"
-    if directory_exists(src_dir):
+    min_src_dir = "min_photos/"
+    if directory_exists(src_dir):  # 若存在photos目录
+        # 判断目录存在与否
         if not directory_exists(src_dir):
-            make_directory(src_dir)
+            make_directory(src_dir)  # 若目录不存在，新建一个
+        if not directory_exists(min_src_dir):
+            make_directory(min_src_dir)  # 若目录不存在，新建一个
         # business logic
-        file_list = list_img_file(src_dir)
+        file_list = list_img_file(src_dir)  # 列出全部图片（jpg, png, gif）
         # print file_list
-        if file_list:
+        if file_list:  # 如果图片列表不为空
             print_help()
             for infile in file_list:
-                img = Image.open(src_dir+infile)
-                Graphics(infile=src_dir+infile, outfile=src_dir + infile).cut_by_ratio()
+                img = Image.open(src_dir+infile)  # 打开一张图片
+                Graphics(infile=src_dir+infile, outfile=min_src_dir + infile).cut_by_ratio()
         else:
             pass
     else:
         print("source directory not exist!")
 
+def clear_min():
+    src_dir = "photos/"
+    min_src_dir = "min_photos/"
+    if directory_exists(src_dir):  # 若存在photos目录
+        # 判断目录存在与否
+        if not directory_exists(min_src_dir):
+            make_directory(min_src_dir)  # 若min目录不存在，新建一个
+        else:
+            pass
+        file_list = list_img_file(src_dir)  # 列出全部图片（jpg, png, gif）
+        min_list = list_img_file(min_src_dir)
+        # print file_list
+        if min_list:  # 如果图片列表不为空
+            for minfile in min_list:
+                if minfile not in file_list:
+                    print("发现一张已经清理的图！")
+                    if os.path.isfile(min_src_dir + minfile):
+                        os.remove(min_src_dir + minfile)
+                        print("已经清理" + minfile)
+                    else: print("未发现该缩略图")
+    else:
+        print("source directory not exist!")
 
+def cut_and_compress():
+    src_dir = "photos/"
+    min_src_dir = "min_photos/"
+    if directory_exists(src_dir):  # 若存在photos目录
+        # 判断目录存在与否
+        if not directory_exists(min_src_dir):
+            make_directory(min_src_dir)  # 若min目录不存在，新建一个
+        file_list = list_img_file(src_dir)  # 列出全部图片（jpg, png, gif）
+        min_list = list_img_file(min_src_dir)
+        if file_list:  # 如果图片列表不为空
+
+            # file_list中，去除所有已经在min里的图
+            for i in range(len(min_list)):
+                if min_list[i] in file_list:
+                    print("发现压缩过的图片："+min_list[i])
+                    file_list.remove(min_list[i])
+
+            # 切割图片
+            for file in file_list:
+                Graphics(infile=src_dir + file, outfile=min_src_dir + file).cut_by_ratio()
+
+            if len(file_list) == 0:
+                print("=====没有新文件需要压缩=======")
+            else:
+                compress('4', min_src_dir, src_dir, file_list)
+    else:
+        print("source directory not exist!")
 
 def git_operation():
     '''
@@ -172,6 +242,9 @@ def git_operation():
 
 if __name__ == "__main__":
     # cut_photo()        # 裁剪图片，裁剪成正方形，去中间部分
-    compress_photo()   # 压缩图片，并保存到mini_photos文件夹下
+    # compress_photo()   # 压缩图片，并保存到mini_photos文件夹下
+    clear_min()
+    cut_and_compress()
     git_operation()    # 提交到github仓库
     handle_photo()     # 将文件处理成json格式，存到博客仓库中
+    print("处理完成！下一步可以试试 hexo g！")
