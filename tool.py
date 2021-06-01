@@ -115,7 +115,7 @@ def handle_photo():
         if date_list[1] == "00":
             date_list[1] = '未知'
         if date_list[0]=="0000":
-            date_list[2] = '未知'
+            date_list[0] = '未知'
         # date = datetime.strptime(date_str, "%Y-%m-%d")
         year_month = date_str[0:7]  # 月份必须写成01月
         # 补充：图片尺寸
@@ -224,7 +224,7 @@ def cut_and_compress():
             # file_list中，去除所有已经在min里的图
             for i in range(len(min_list)):
                 if min_list[i] in file_list:
-                    print("发现压缩过的图片："+min_list[i])
+                    # print("发现压缩过的图片："+min_list[i])
                     file_list.remove(min_list[i])
 
             # 切割图片
