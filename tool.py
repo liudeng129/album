@@ -112,6 +112,10 @@ def handle_photo():
         assert len(date_list)==3
         if date_list[2]=="00":
             date_list[2] = '未知'
+        if date_list[1] == "00":
+            date_list[1] = '未知'
+        if date_list[0]=="0000":
+            date_list[2] = '未知'
         # date = datetime.strptime(date_str, "%Y-%m-%d")
         year_month = date_str[0:7]  # 月份必须写成01月
         # 补充：图片尺寸
@@ -250,6 +254,6 @@ if __name__ == "__main__":
     # compress_photo()   # 压缩图片，并保存到mini_photos文件夹下
     clear_min()
     cut_and_compress()
-    git_operation()    # 提交到github仓库
+    # git_operation()    # 提交到github仓库
     handle_photo()     # 将文件处理成json格式，存到博客仓库中
     print("处理完成！下一步可以试试 hexo g！")
