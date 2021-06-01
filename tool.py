@@ -110,6 +110,8 @@ def handle_photo():
         date_list = date_str.split("-")
         # print(date_list)
         assert len(date_list)==3
+        if date_list[2]=="00":
+            date_list[2] = '未知'
         # date = datetime.strptime(date_str, "%Y-%m-%d")
         year_month = date_str[0:7]  # 月份必须写成01月
         # 补充：图片尺寸
@@ -120,6 +122,7 @@ def handle_photo():
         if i == 0:  # 处理第一个文件
             new_dict = {"date": year_month, "arr":{'year': date_list[0],
                                                                 'month': date_list[1],
+                                                                'day': [date_list[2]],
                                                                 'link': [filename],
                                                                 'text': [info],
                                                                 'type': ['image'],
@@ -131,6 +134,7 @@ def handle_photo():
         elif year_month != list_info[-1]['date']:  # 不是最后的一个日期，就新建一个dict
             new_dict = {"date": year_month, "arr":{'year': date_list[0],
                                                    'month': date_list[1],
+                                                   'day': [date_list[2]],
                                                    'link': [filename],
                                                    'text': [info],
                                                    'type': ['image'],
@@ -140,6 +144,7 @@ def handle_photo():
                         }
             list_info.append(new_dict)
         else:  # 同一个日期
+            list_info[-1]['arr']['day'].append(date_list[2])
             list_info[-1]['arr']['link'].append(filename)
             list_info[-1]['arr']['text'].append(info)
             list_info[-1]['arr']['type'].append('image')
